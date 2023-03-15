@@ -6,7 +6,8 @@ The class or section calendars are complex to coordinate between them and the st
 
 That system does not allow you to see on the calendar which teachers will be attending because it does not support the calendar view of the sharepoint list plus data.
 The application made gets the data from the calendars in sharepoint and the teachers included in an AzureAD security group.
-![TeachersPage](https://user-images.githubusercontent.com/19351006/225450883-a61eb2b4-d37d-41d5-9115-7197b50bcac8.png)
+![TeachersPage](https://user-images.githubusercontent.com/19351006/225454642-6e3e95b7-c72e-4f32-a298-731c8061a174.png)
+
 
 The application allows to make assignments of teachers to the corresponding sections and subjects, and these are saved in a sharepoint list for this purpose.
 ![addAssignmentPage](https://user-images.githubusercontent.com/19351006/225451099-e75cd7b5-3843-4cc9-aae7-5a586b6fd509.png)
