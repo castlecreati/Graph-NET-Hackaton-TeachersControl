@@ -1,0 +1,34 @@
+﻿@page "/showprofile"
+
+@using Microsoft.Graph
+@inject IUserService UserService
+
+<h1>Me</h1>
+
+@if (user == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped table-condensed" style="font-family: monospace">
+        <tr>
+            <th>Property</th>
+            <th>Value</th>
+        </tr>
+        <tr>
+            <td>Name</td>
+            <td>@user.DisplayName</td>
+        </tr>
+    </table>
+}
+
+@code {
+    User? user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserService.GetUserAsync();
+    }
+   
+}

@@ -1,0 +1,40 @@
+﻿@page "/"
+
+@using Microsoft.Graph
+@inject IUserService UserService
+
+<PageTitle>Index</PageTitle>
+
+<h2>Welcome to your Teachers Control app.</h2>
+
+This is the logged User
+
+@if(user == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped table-condensed" style="font-family: monospace">
+        <tr>
+            <th>Property</th>
+            <th>Value</th>
+        </tr>
+        <tr>
+            <td>Name</td>
+            <td>@user.DisplayName</td>
+        </tr>
+    </table>
+}
+
+@code {
+    User? user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserService.GetUserAsync();
+    }
+
+}
+
+<SurveyPrompt Title="How is Blazor working for you?" />

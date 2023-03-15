@@ -1,0 +1,89 @@
+﻿@using static TeachersControl.Pages.SectionsData;
+@using static TeachersControl.Pages.CalendarItems;
+@inject ISectionService SectionService
+@inject IAssignmentService AssignmentService
+@inject ITeacherDataService TeacherDataService
+
+
+
+<h3>Showing Teachers Assistance of @DateOnly.FromDateTime(DesiredDate)</h3>
+
+<div>
+    @ChildContent
+</div>
+
+@if (assistances == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Teacher</th>
+                <th>Start Time</th>
+                <th>Section</th>
+                <th>Subject</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in assistances)
+            {
+                <tr>
+                    <td>@item.Teacher</td>
+                    <td>@item.StartTime.TimeOfDay</td>
+                    <td>@item.Section</td>
+                    <td>@item.Subject</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+    private List<Assignment> assignments = new List<Assignment>();
+    private List<CalendarItem> totalCalendarItemsOfDay = new List<CalendarItem>();
+    private List<Calendar> calendars = new List<Calendar>();
+    private List<Assistance> assistances = new List<Assistance>();
+
+    [Parameter]
+    public DateTime DesiredDate { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        calendars = (await SectionService.GetAllCalendars()).ToList();
+        assignments = (await AssignmentService.GetAllAssignments()).ToList();
+        assistances.Clear();
+
+        foreach(var calendar in calendars)
+        {
+            var totalCalendarItems = (await SectionService.GetCalendarItemsByCalendar(calendar.Id))
+            .Where(d => d.StartTime.Date == DesiredDate.Date)
+            .ToList();
+            foreach(var item in totalCalendarItems)
+            {
+                //totalCalendarItemsOfDay.Add(item);
+                foreach (var assignment in assignments)
+                {
+                    if (item.Subject == assignment.Subject && assignment.Section == calendar.Name)
+                    {
+                        var assistance = new Assistance();
+                        assistance.Teacher = assignment.Teacher;
+                        assistance.StartTime = item.StartTime;
+                        assistance.Section = calendar.Name;
+                        assistance.Subject = item.Subject;
+                        assistances.Add(assistance);
+                    }
+                }
+            }
+        }
+        assistances.OrderBy(n => n.Teacher);
+
+    }
+
+}

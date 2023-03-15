@@ -1,0 +1,56 @@
+﻿@page "/calendar/items"
+
+@inject ISectionService SectionService
+
+
+
+<PageTitle>Calendar Items</PageTitle>
+<h3>Calendar Items</h3>
+@if (calendarItems == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Clase</th>
+                <th>Start Time</th>
+                <th>Finish Time</th>
+                <th>Subject</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in calendarItems)
+            {
+                <tr>
+                    <td>@item.Clase</td>
+                    <td>@item.StartTime.ToString()</td>
+                    <td>@item.FinishTime</td>
+                    <td>@item.Subject</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<CalendarItem> calendarItems = new List<CalendarItem>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        calendarItems = (await SectionService.GetAllCalendarItems()).ToList();
+
+    }
+
+    public class CalendarItem
+    {
+        public string Clase;
+        public DateTime StartTime;
+        public DateTime FinishTime;
+        public string Subject;
+
+    }
+}

@@ -1,0 +1,23 @@
+﻿@page "/teachers/control"
+
+@inject ISectionService SectionService
+@inject IAssignmentService AssignmentService
+@inject ITeacherDataService TeacherDataService
+
+
+<h3>Teachers Control</h3>
+
+<div class="row mb-3">
+    <label for="joineddate" class="col-form-label col-md-3">Desired Date: </label>
+    <div class="col-md-8">
+        <InputDate id="joineddate" class="form-control" @bind-Value="@DesiredDate" placeholder="Enter desired date"></InputDate>
+    </div>
+</div>
+
+<ShowTeachersAssistance DesiredDate=@DesiredDate ></ShowTeachersAssistance>
+
+@code {
+    private DateTime DesiredDate { get; set; } = DateTime.Today;
+
+
+}

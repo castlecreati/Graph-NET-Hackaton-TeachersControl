@@ -1,0 +1,95 @@
+﻿@page "/assignments/list"
+@page "/assignments/list/{currentPage:int?}"
+
+@inject NavigationManager NavigationManager
+@inject IAssignmentService AssignmentService
+
+<PageTitle>Assignments</PageTitle>
+<h1>Assignments</h1>
+
+@if (Assignments == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <ul class="pagination mt-3">
+        <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+            <a class="page-link" href="/assignments/list/@(CurrentPage - 1)">Previous</a>
+        </li>
+        @for (int i = 1; i <= TotalPages; i++)
+        {
+            <li class="page-item @(CurrentPage == i ? "active" : "")">
+                <a class="page-link" href="/assignments/list/@i">@i</a>
+            </li>
+        }
+        <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+            <a class="page-link" href="/assignments/list/@(CurrentPage + 1)">Next</a>
+        </li>
+    </ul>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Teacher</th>
+                <th>Section</th>
+                <th>Subject</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var assignment in Assignments
+                           .OrderBy(t => t.Id)
+                           .Skip(ItemsToSkip)
+                           .Take(ItemsPerPage)
+                           .ToArray())
+            {
+                <tr>
+                    <td>@assignment.Id</td>
+                    <td>@assignment.Teacher</td>
+                    <td>@assignment.Section</td>
+                    <td>@assignment.Subject</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    [Parameter]
+    public int? CurrentPage { get; set; }
+    private List<Assignment> Assignments = new List<Assignment>();
+    private int TotalPages { get; set; }
+    private int AssignmentsCount { get; set; } = 0;
+    private const int ItemsPerPage = 5;
+    private int ItemsToSkip { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Initialize pagination
+        if (CurrentPage is null or < 1)
+        {
+            NavigationManager.NavigateTo("/assignments/list/1");
+            return;
+        }
+        
+        Assignments = (await AssignmentService.GetAllAssignments()).ToList();
+        AssignmentsCount = Assignments.Count();
+
+
+        //Pagination block
+        TotalPages = AssignmentsCount == 0
+                 ? 1
+                 : (int)Math.Ceiling((double)AssignmentsCount / ItemsPerPage);
+
+        if (CurrentPage > TotalPages)
+        {
+            NavigationManager.NavigateTo($"/assignments/list/{TotalPages}");
+            return;
+        }
+
+        ItemsToSkip = (CurrentPage.Value - 1) * ItemsPerPage;
+
+    }
+}

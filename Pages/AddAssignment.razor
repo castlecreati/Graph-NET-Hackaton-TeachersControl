@@ -1,0 +1,172 @@
+﻿@page "/assignment/add/{AssignmentId?}"
+
+@using TeachersControl.Data;
+@using static TeachersControl.Pages.TeachersData;
+@using static TeachersControl.Pages.CalendarItems;
+
+@inject ISectionService SectionService
+@inject IAssignmentService AssignmentService
+@inject ITeacherDataService TeacherDataService
+@inject NavigationManager NavigationManager
+
+
+<PageTitle>AddAssignment</PageTitle>
+
+<h3>Add an Assignment</h3>
+
+@if (!Saved)
+{
+    <h3>Select in each field the appropiate value</h3>
+
+    <EditForm Model="@assignment" OnValidSubmit="@HandleValidSubmit"
+          OnInvalidSubmit="@HandleInvalidSubmit">
+
+            <DataAnnotationsValidator />
+            <ValidationSummary></ValidationSummary>
+        <div class="row g-3">
+            <div class="col-sm-7">
+                <InputSelect id="teacher" 
+                    class="form-control col-md-8" 
+                    @bind-Value="@assignment.Teacher" 
+                    placeholder="Select Teacher">
+                    <option value=""></option>
+                    @foreach (var value in teachers)
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => assignment.Teacher)" />
+            </div>
+            <div class="col-sm">
+                <InputSelect id="section"
+                    class="form-control col-md-8"
+                    @bind-Value="@assignment.Section"
+                    placeholder="Select Section">
+                    <option value=""></option>
+                    @foreach (var value in sections)
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => assignment.Section)" />
+            </div>
+            <div class="col-sm">
+                <InputSelect id="subject"
+                    class="form-control col-sm-8" 
+                    placeholder="Select Subject" 
+                    aria-label="Subject"
+                    @bind-Value="@assignment.Subject">
+                    <option value=""></option>
+                    @foreach (var value in subjects)
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => assignment.Subject)" />
+            </div>
+            
+        </div>
+        <div><label>Click inside fields to dropdown</label> </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Add</button>
+        </div>
+    </EditForm>
+}
+else
+{
+    <div class="alert @StatusClass">@Message</div>
+    <div class="row g-2">
+        <button type="button" class="btn btn-outline-primary col-sm-2" @onclick="@NavigateToOverview">Back to assignment list</button>
+        <button type="button" class="btn btn-outline-secondary col-sm-2" @onclick="@AddAnotherAssignment">Add another assignment</button>
+    </div>
+
+}
+
+@code {
+    public Assignment assignment { get; set; } = new Assignment();
+    public List<string>? subjects = new List<string>();
+    public List<string>? teachers = new List<string>();
+    public List<string>? sections = new List<string>();
+
+    protected string Message = string.Empty;
+    protected string StatusClass = string.Empty;
+
+    protected bool Saved;
+
+    [Parameter]
+    public string? AssignmentId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Saved = false;
+
+        //get items for dropdowns
+        subjects = (await SectionService.GetDistinctSubjects()).ToList();
+        sections = (await SectionService.GetAllCalendars()).Select(f => f.Name).ToList();
+        teachers = (await TeacherDataService.GetAllTeachers()).Select(f =>f.FullName).ToList();
+
+        if (AssignmentId == null)  //new employee is being created
+        {
+            //add some defaults
+            assignment = new Assignment();
+        }
+        else
+        {
+            assignment = await AssignmentService.GetAssignment(AssignmentId);
+        }
+
+    }
+    protected async Task HandleValidSubmit()
+    {
+        Saved = false;
+        if (AssignmentId == null) //new
+        {
+            var addedassignment = await AssignmentService.AddAssignment(assignment);
+            if (addedassignment != null)
+            {
+                StatusClass = "alert-success";
+                Message = "New assignment added successfully.";
+                Saved = true;
+            }
+            else
+            {
+                StatusClass = "alert-danger";
+                Message = "Something went wrong adding the new assignment. Please try again.";
+                Saved = false;
+            }
+        }
+        else
+        {
+            await AssignmentService.UpdateAssignment(assignment);
+            StatusClass = "alert-success";
+            Message = "Assignment updated successfully.";
+            Saved = true;
+        }
+    }
+    protected async Task HandleInvalidSubmit()
+    {
+        StatusClass = "alert-danger";
+        Message = "There are some validation errors. Please try again.";
+    }
+
+    protected async Task DeleteAssignment()
+    {
+        await AssignmentService.DeleteAssignment(assignment.Id);
+
+        StatusClass = "alert-success";
+        Message = "Deleted successfully";
+
+        Saved = true;
+    }
+    protected void NavigateToOverview()
+    {
+        NavigationManager.NavigateTo("/assignments/list");
+    }
+    protected void AddAnotherAssignment()
+    {
+        Saved = false;
+        assignment = new Assignment();
+        NavigationManager.NavigateTo("/assignment/add");
+    }
+
+}

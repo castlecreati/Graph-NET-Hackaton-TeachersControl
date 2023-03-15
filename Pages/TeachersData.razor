@@ -1,0 +1,100 @@
+﻿@page "/teachers/list"
+@page "/teachers/list/{currentPage:int?}"
+
+@inject NavigationManager NavigationManager
+@inject ITeacherDataService TeacherDataService
+
+<PageTitle>Teachers</PageTitle>
+<h1>Teachers</h1>
+
+@if (Teachers == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <ul class="pagination mt-3">
+        <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+            <a class="page-link" href="/teachers/list/@(CurrentPage - 1)">Previous</a>
+        </li>
+        @for (int i = 1; i <= TotalPages; i++)
+        {
+            <li class="page-item @(CurrentPage == i ? "active" : "")">
+                <a class="page-link" href="/teachers/list/@i">@i</a>
+            </li>
+        }
+        <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+            <a class="page-link" href="/teachers/list/@(CurrentPage + 1)">Next</a>
+        </li>
+    </ul>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Teacher</th>
+                <th>Mail</th>
+                <th>Control</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var teacher in Teachers
+                           .OrderBy(t => t.FullName)
+                           .Skip(ItemsToSkip)
+                           .Take(ItemsPerPage)
+                           .ToArray())
+            {
+                <tr>
+                    <td>@teacher.FullName</td>
+                    <td>@teacher.Email</td>
+                    <td>@teacher.IsControled</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    [Parameter]
+    public int? CurrentPage { get; set; }
+    private List<Teacher> Teachers = new List<Teacher>();
+    private int TotalPages { get; set; }
+    private int TeachersCount { get; set; } = 0;
+    private const int ItemsPerPage = 5;
+    private int ItemsToSkip { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Initialize pagination
+        if (CurrentPage is null or < 1)
+        {
+            NavigationManager.NavigateTo("/teachers/list/1");
+            return;
+        }
+        
+        Teachers = (await TeacherDataService.GetAllTeachers()).ToList();
+        TeachersCount = Teachers.Count();
+
+
+        //Pagination block
+        TotalPages = TeachersCount == 0
+                 ? 1
+                 : (int)Math.Ceiling((double)TeachersCount / ItemsPerPage);
+
+        if (CurrentPage > TotalPages)
+        {
+            NavigationManager.NavigateTo($"/teachers/list/{TotalPages}");
+            return;
+        }
+
+        ItemsToSkip = (CurrentPage.Value - 1) * ItemsPerPage;
+
+    }
+
+    public class Teacher
+    {
+        public string FullName;
+        public string Email;
+        public bool IsControled = false;
+    }
+}

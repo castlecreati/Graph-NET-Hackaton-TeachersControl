@@ -1,0 +1,49 @@
+﻿@page "/sections/list"
+
+@inject ISectionService SectionService
+
+<PageTitle>Calendars</PageTitle>
+<h1>Calendars</h1>
+
+@if (calendars == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var calendar in calendars)
+            {
+                <tr>
+                    <td>@calendar.Id</td>
+                    <td>@calendar.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private List<Calendar> calendars = new List<Calendar>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        calendars = (await SectionService.GetAllCalendars()).ToList();
+
+    }
+
+    public class Calendar
+    {
+        public string Id;
+        public string Name;
+
+    }
+}
